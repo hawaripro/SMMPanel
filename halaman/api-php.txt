@@ -1,0 +1,65 @@
+<?php 
+require_once("../config.php");
+ 
+$apikey = "API KEY ANDA";
+ 
+$postdata = "api_key=$apikey&action=layanan";
+ 
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://zaynflazz.com/api/sosial-media");
+curl_setopt($ch, CURLOPT_POST, 1);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+$chresult = curl_exec($ch);
+//echo $chresult;
+curl_close($ch);
+$json_result = json_decode($chresult, true);
+//
+$no = 1;
+$indeks=0; 
+while($indeks < count($json_result['data'])){ 
+$id_provider = $json_result['data'][$indeks]['sid'];
+$kategori = $json_result['data'][$indeks]['kategori'];
+$layanan = $json_result['data'][$indeks]['layanan'];        
+$min = $json_result['data'][$indeks]['min'];
+$max = $json_result['data'][$indeks]['max'];
+$harga = $json_result['data'][$indeks]['harga'] + 2000;
+$catatan = $json_result['data'][$indeks]['catatan'];
+$provider = "ZAYNFLAZZ";
+$indeks++; 
+                                              
+//INSERT KATEGORI KE DATABASE kategori_layanan
+$cek_kategori = $conn->query("SELECT * FROM kategori_layanan WHERE nama = '$kategori'");
+if(mysqli_num_rows($cek_kategori) > 0){
+}else{
+$input_kategori = $conn->query("INSERT INTO kategori_layanan VALUES ('','$kategori','$kategori','Sosial Media')");
+}
+        
+$cek_layanan = $conn->query("SELECT * FROM layanan_sosmed WHERE provider_id = '$id_provider' AND provider = ZAYNFLAZZ'");
+$data_layanan = $cek_layanan->fetch_assoc();
+if(mysqli_num_rows($cek_layanan) > 0) {
+echo "Layanan Sudah Ada Di database => $layanan | $id_provider \n <br />";
+} else {
+ 
+$sid = $no++;
+$insert_layanan = $conn->query("INSERT INTO layanan_sosmed VALUES ('','$sid' ,'$kategori' ,'$layanan' ,'$catatan' ,'$min' ,'$max' ,'$harga', '2000', 'Aktif' ,'$id_provider' ,'ZAYNFLAZZ' ,'Sosial Media')");
+if($insert_layanan == TRUE){
+ 
+echo "===============================
+Input Layanan Sukses  <br/>
+Kategori : $kategori <br/>
+SID : $sid <br />
+Layanan : $layanan <br />
+Min :$min <br />
+Max : $max  <br />
+Harga : $harga  <br />
+Note : $catatan <br />
+===================================<br/>";
+}else{
+echo "Gagal";
+}
+// echo $no++." ";
+}
+}
+?>
